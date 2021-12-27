@@ -1,4 +1,5 @@
 import Constants from 'expo-constants'
+import * as Location from 'expo-location'
 import * as Notifications from 'expo-notifications'
 import React, { useEffect, useRef, useState } from 'react'
 import { Button, Platform, ScrollView, Text, View } from 'react-native'
@@ -14,6 +15,7 @@ Notifications.setNotificationHandler({
 export default function App() {
   // Panel Controller
   const [vNotif, setVNotif] = useState(false);
+  const [vGeo, setVGeo] = useState(false);
 
   // #1 Notifications and Special Notifications
   const [expoPushToken, setExpoPushToken] = useState("");
@@ -44,6 +46,30 @@ export default function App() {
     };
   }, []);
 
+  // #2 Geo-Location
+  const [location, setLocation] = useState(null);
+  const [errorMsg, setErrorMsg] = useState(null);
+
+  useEffect(() => {
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        setErrorMsg("Permission to access location was denied");
+        return;
+      }
+
+      let location = await Location.getCurrentPositionAsync({});
+      setLocation(location);
+    })();
+  }, []);
+
+  let textGeoLocation = "Waiting..";
+  if (errorMsg) {
+    textGeoLocation = errorMsg;
+  } else if (location) {
+    textGeoLocation = JSON.stringify(location);
+  }
+
   return (
     <ScrollView style={{ padding: 40 }}>
       {/* #1 Notifications and Special Notifications */}
@@ -53,7 +79,7 @@ export default function App() {
       ></Button>
       <View
         style={{
-          transform: [{ scale: vNotif ? 1 : 0 }],
+          display: vNotif ? null : "none",
         }}
       >
         <Text>Your expo push token: {expoPushToken}</Text>
@@ -73,6 +99,16 @@ export default function App() {
             await schedulePushNotification();
           }}
         />
+      </View>
+
+      {/* #2 Geo-Location */}
+      <Button title="Geo-Location" onPress={() => setVGeo(!vGeo)}></Button>
+      <View
+        style={{
+          display: vGeo ? null : "none",
+        }}
+      >
+        <Text>{textGeoLocation}</Text>
       </View>
     </ScrollView>
   );
