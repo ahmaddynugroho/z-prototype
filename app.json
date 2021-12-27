@@ -1,0 +1,11 @@
+{
+  "expo": {
+    "name": "z-prototype",
+    "slug": "z-prototype",
+    "version": "1.0.0",
+    "assetBundlePatterns": [
+      "**/*"
+    ]
+  },
+  "name": "z-prototype"
+}
