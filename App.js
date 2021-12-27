@@ -1,3 +1,4 @@
+import { Audio } from 'expo-av'
 import { Camera } from 'expo-camera'
 import Constants from 'expo-constants'
 import * as Location from 'expo-location'
@@ -90,6 +91,15 @@ export default function App() {
     return <Text>No access to camera</Text>;
   }
 
+  // #4 Speaker
+  const playSound = async () => {
+    const sound = new Audio.Sound();
+    try {
+      await sound.loadAsync(require("./assets/risitas.mp3"));
+      await sound.playAsync();
+    } catch (error) {}
+  };
+
   return (
     <ScrollView style={{ padding: 40 }}>
       {/* #1 Notifications and Special Notifications */}
@@ -150,6 +160,9 @@ export default function App() {
           </View>
         </Camera>
       </View>
+
+      {/* #4 Speaker */}
+      <Button title="Play Sound" onPress={playSound}></Button>
     </ScrollView>
   );
 }
