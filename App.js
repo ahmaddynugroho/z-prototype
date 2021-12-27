@@ -1,8 +1,9 @@
+import { Camera } from 'expo-camera'
 import Constants from 'expo-constants'
 import * as Location from 'expo-location'
 import * as Notifications from 'expo-notifications'
 import React, { useEffect, useRef, useState } from 'react'
-import { Button, Platform, ScrollView, Text, View } from 'react-native'
+import { Button, Platform, ScrollView, Text, TouchableOpacity, View } from 'react-native'
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -16,6 +17,7 @@ export default function App() {
   // Panel Controller
   const [vNotif, setVNotif] = useState(false);
   const [vGeo, setVGeo] = useState(false);
+  const [vCamera, setVCamera] = useState(false);
 
   // #1 Notifications and Special Notifications
   const [expoPushToken, setExpoPushToken] = useState("");
@@ -70,6 +72,24 @@ export default function App() {
     textGeoLocation = JSON.stringify(location);
   }
 
+  // #3 Camera
+  const [hasPermission, setHasPermission] = useState(null);
+  const [type, setType] = useState(Camera.Constants.Type.back);
+
+  useEffect(() => {
+    (async () => {
+      const { status } = await Camera.requestPermissionsAsync();
+      setHasPermission(status === "granted");
+    })();
+  }, []);
+
+  if (hasPermission === null) {
+    return <View />;
+  }
+  if (hasPermission === false) {
+    return <Text>No access to camera</Text>;
+  }
+
   return (
     <ScrollView style={{ padding: 40 }}>
       {/* #1 Notifications and Special Notifications */}
@@ -109,6 +129,26 @@ export default function App() {
         }}
       >
         <Text>{textGeoLocation}</Text>
+      </View>
+
+      {/* #3 Camera */}
+      <Button title="Camera" onPress={() => setVCamera(!vCamera)}></Button>
+      <View style={{ display: vCamera ? null : "none" }}>
+        <Camera type={type} style={{ height: 100 }}>
+          <View>
+            <TouchableOpacity
+              onPress={() => {
+                setType(
+                  type === Camera.Constants.Type.back
+                    ? Camera.Constants.Type.front
+                    : Camera.Constants.Type.back
+                );
+              }}
+            >
+              <Text> Flip </Text>
+            </TouchableOpacity>
+          </View>
+        </Camera>
       </View>
     </ScrollView>
   );
