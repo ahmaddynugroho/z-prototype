@@ -19,6 +19,7 @@ export default function App() {
   const [vNotif, setVNotif] = useState(false);
   const [vGeo, setVGeo] = useState(false);
   const [vCamera, setVCamera] = useState(false);
+  const [vMic, setVMic] = useState(false);
 
   // useState
   const [expoPushToken, setExpoPushToken] = useState(""); // #2 #3 Notifications and Special Notifications
@@ -27,6 +28,7 @@ export default function App() {
   const [errorMsg, setErrorMsg] = useState(null);
   const [hasPermission, setHasPermission] = useState(null); // #5 Camera
   const [type, setType] = useState(Camera.Constants.Type.back);
+  const [recording, setRecording] = React.useState(); // #7 Microphone Access
 
   // useRef
   const notificationListener = useRef(); // #2 #3 Notifications and Special Notifications
@@ -104,6 +106,34 @@ export default function App() {
     } catch (error) {}
   };
 
+  // #7 Microphone
+  async function startRecording() {
+    try {
+      console.log("Requesting permissions..");
+      await Audio.requestPermissionsAsync();
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
+      });
+      console.log("Starting recording..");
+      const { recording } = await Audio.Recording.createAsync(
+        Audio.RECORDING_OPTIONS_PRESET_HIGH_QUALITY
+      );
+      setRecording(recording);
+      console.log("Recording started");
+    } catch (err) {
+      console.error("Failed to start recording", err);
+    }
+  }
+
+  async function stopRecording() {
+    console.log("Stopping recording..");
+    setRecording(undefined);
+    await recording.stopAndUnloadAsync();
+    const uri = recording.getURI();
+    console.log("Recording stopped and stored at", uri);
+  }
+
   return (
     <ScrollView style={{ padding: 40 }}>
       {/* #2 #3 Notifications and Special Notifications */}
@@ -167,6 +197,15 @@ export default function App() {
 
       {/* #6 Speaker */}
       <Button title="Play Sound" onPress={playSound}></Button>
+
+      {/* #7 Microphone */}
+      <Button title="Microphone Access" onPress={() => setVMic(!vMic)}></Button>
+      <View style={{ display: vMic ? null : "none" }}>
+        <Button
+          title={recording ? "Stop recording" : "Start recording"}
+          onPress={recording ? stopRecording : startRecording}
+        ></Button>
+      </View>
     </ScrollView>
   );
 }
