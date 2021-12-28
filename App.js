@@ -1,17 +1,10 @@
-import { Audio } from "expo-av";
-import { Camera } from "expo-camera";
-import Constants from "expo-constants";
-import * as Location from "expo-location";
-import * as Notifications from "expo-notifications";
-import React, { useEffect, useRef, useState } from "react";
-import {
-  Button,
-  Platform,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Audio } from 'expo-av'
+import { Camera } from 'expo-camera'
+import Constants from 'expo-constants'
+import * as Location from 'expo-location'
+import * as Notifications from 'expo-notifications'
+import React, { useEffect, useRef, useState } from 'react'
+import { Button, Platform, ScrollView, Text, TouchableOpacity, View } from 'react-native'
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -28,20 +21,20 @@ export default function App() {
   const [vCamera, setVCamera] = useState(false);
 
   // useState
-  const [expoPushToken, setExpoPushToken] = useState(""); // #1 Notifications and Special Notifications
+  const [expoPushToken, setExpoPushToken] = useState(""); // #2 #3 Notifications and Special Notifications
   const [notification, setNotification] = useState(false);
-  const [location, setLocation] = useState(null); // #2 Geo-Location
+  const [location, setLocation] = useState(null); // #4 Geo-Location
   const [errorMsg, setErrorMsg] = useState(null);
-  const [hasPermission, setHasPermission] = useState(null); // #3 Camera
+  const [hasPermission, setHasPermission] = useState(null); // #5 Camera
   const [type, setType] = useState(Camera.Constants.Type.back);
 
   // useRef
-  const notificationListener = useRef(); // #1 Notifications and Special Notifications
+  const notificationListener = useRef(); // #2 #3 Notifications and Special Notifications
   const responseListener = useRef();
 
   // useEffect
   useEffect(() => {
-    // #1 Notifications and Special Notifications
+    // #2 #3 Notifications and Special Notifications
     registerForPushNotificationsAsync().then((token) =>
       setExpoPushToken(token)
     );
@@ -64,7 +57,7 @@ export default function App() {
     };
   }, []);
   useEffect(() => {
-    // #2 Geo-Location
+    // #4 Geo-Location
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
@@ -77,16 +70,16 @@ export default function App() {
     })();
   }, []);
   useEffect(() => {
-    // #3 Camera
+    // #5 Camera
     (async () => {
       const { status } = await Camera.requestPermissionsAsync();
       setHasPermission(status === "granted");
     })();
   }, []);
 
-  // #1 Notifications and Special Notifications
+  // #2 #3 Notifications and Special Notifications
 
-  // #2 Geo-Location
+  // #4 Geo-Location
   let textGeoLocation = "Waiting..";
   if (errorMsg) {
     textGeoLocation = errorMsg;
@@ -94,7 +87,7 @@ export default function App() {
     textGeoLocation = JSON.stringify(location);
   }
 
-  // #3 Camera
+  // #5 Camera
   if (hasPermission === null) {
     return <View />;
   }
@@ -102,7 +95,7 @@ export default function App() {
     return <Text>No access to camera</Text>;
   }
 
-  // #4 Speaker
+  // #6 Speaker
   const playSound = async () => {
     const sound = new Audio.Sound();
     try {
@@ -113,7 +106,7 @@ export default function App() {
 
   return (
     <ScrollView style={{ padding: 40 }}>
-      {/* #1 Notifications and Special Notifications */}
+      {/* #2 #3 Notifications and Special Notifications */}
       <Button
         title="Notifications and Special Notifications"
         onPress={() => setVNotif(!vNotif)}
@@ -142,7 +135,7 @@ export default function App() {
         />
       </View>
 
-      {/* #2 Geo-Location */}
+      {/* #4 Geo-Location */}
       <Button title="Geo-Location" onPress={() => setVGeo(!vGeo)}></Button>
       <View
         style={{
@@ -152,7 +145,7 @@ export default function App() {
         <Text>{textGeoLocation}</Text>
       </View>
 
-      {/* #3 Camera */}
+      {/* #5 Camera */}
       <Button title="Camera" onPress={() => setVCamera(!vCamera)}></Button>
       <View style={{ display: vCamera ? null : "none" }}>
         <Camera type={type} style={{ height: 100 }}>
@@ -172,13 +165,13 @@ export default function App() {
         </Camera>
       </View>
 
-      {/* #4 Speaker */}
+      {/* #6 Speaker */}
       <Button title="Play Sound" onPress={playSound}></Button>
     </ScrollView>
   );
 }
 
-// #1 Notifications and Special Notifications
+// #2 #3 Notifications and Special Notifications
 async function schedulePushNotification() {
   await Notifications.scheduleNotificationAsync({
     content: {
