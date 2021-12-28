@@ -1,10 +1,17 @@
-import { Audio } from 'expo-av'
-import { Camera } from 'expo-camera'
-import Constants from 'expo-constants'
-import * as Location from 'expo-location'
-import * as Notifications from 'expo-notifications'
-import React, { useEffect, useRef, useState } from 'react'
-import { Button, Platform, ScrollView, Text, TouchableOpacity, View } from 'react-native'
+import { Audio } from "expo-av";
+import { Camera } from "expo-camera";
+import Constants from "expo-constants";
+import * as Location from "expo-location";
+import * as Notifications from "expo-notifications";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  Button,
+  Platform,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -20,13 +27,21 @@ export default function App() {
   const [vGeo, setVGeo] = useState(false);
   const [vCamera, setVCamera] = useState(false);
 
-  // #1 Notifications and Special Notifications
-  const [expoPushToken, setExpoPushToken] = useState("");
+  // useState
+  const [expoPushToken, setExpoPushToken] = useState(""); // #1 Notifications and Special Notifications
   const [notification, setNotification] = useState(false);
-  const notificationListener = useRef();
+  const [location, setLocation] = useState(null); // #2 Geo-Location
+  const [errorMsg, setErrorMsg] = useState(null);
+  const [hasPermission, setHasPermission] = useState(null); // #3 Camera
+  const [type, setType] = useState(Camera.Constants.Type.back);
+
+  // useRef
+  const notificationListener = useRef(); // #1 Notifications and Special Notifications
   const responseListener = useRef();
 
+  // useEffect
   useEffect(() => {
+    // #1 Notifications and Special Notifications
     registerForPushNotificationsAsync().then((token) =>
       setExpoPushToken(token)
     );
@@ -48,12 +63,8 @@ export default function App() {
       Notifications.removeNotificationSubscription(responseListener.current);
     };
   }, []);
-
-  // #2 Geo-Location
-  const [location, setLocation] = useState(null);
-  const [errorMsg, setErrorMsg] = useState(null);
-
   useEffect(() => {
+    // #2 Geo-Location
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
@@ -65,7 +76,17 @@ export default function App() {
       setLocation(location);
     })();
   }, []);
+  useEffect(() => {
+    // #3 Camera
+    (async () => {
+      const { status } = await Camera.requestPermissionsAsync();
+      setHasPermission(status === "granted");
+    })();
+  }, []);
 
+  // #1 Notifications and Special Notifications
+
+  // #2 Geo-Location
   let textGeoLocation = "Waiting..";
   if (errorMsg) {
     textGeoLocation = errorMsg;
@@ -74,16 +95,6 @@ export default function App() {
   }
 
   // #3 Camera
-  const [hasPermission, setHasPermission] = useState(null);
-  const [type, setType] = useState(Camera.Constants.Type.back);
-
-  useEffect(() => {
-    (async () => {
-      const { status } = await Camera.requestPermissionsAsync();
-      setHasPermission(status === "granted");
-    })();
-  }, []);
-
   if (hasPermission === null) {
     return <View />;
   }
