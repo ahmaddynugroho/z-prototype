@@ -1,11 +1,12 @@
-import { Audio } from 'expo-av'
-import { Camera } from 'expo-camera'
-import Constants from 'expo-constants'
-import * as Contacts from 'expo-contacts'
-import * as Location from 'expo-location'
-import * as Notifications from 'expo-notifications'
-import React, { useEffect, useRef, useState } from 'react'
-import { Button, Platform, ScrollView, Text, TouchableOpacity, View } from 'react-native'
+import { Audio } from "expo-av";
+import { Camera } from "expo-camera";
+import { Accelerometer, Magnetometer, Gyroscope } from "expo-sensors";
+import Constants from "expo-constants";
+import * as Contacts from "expo-contacts";
+import * as Location from "expo-location";
+import * as Notifications from "expo-notifications";
+import React, { useEffect, useRef, useState } from "react";
+import { Button, Platform, ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -16,11 +17,54 @@ Notifications.setNotificationHandler({
 });
 
 export default function App() {
+  // Panel Percobaan
+  // #14 Accelerometer
+  const _subscribeAccel = () => {
+    setSubscriptionAccel(
+      Accelerometer.addListener((accelerometerData) => {
+        setDataAccel(accelerometerData);
+      })
+    );
+  };
+
+  const _unsubscribeAccel = () => {
+    subscriptionAccel && subscriptionAccel.remove();
+    setSubscriptionAccel(null);
+  };
+  useEffect(() => {
+    _subscribeAccel();
+    return () => _unsubscribeAccel();
+  }, []);
+
+  // #15 Magnetometer
+  const _subscribeMag = () => {
+    setSubscriptionMag(
+      Magnetometer.addListener((result) => {
+        setDataMag(result);
+      })
+    );
+  };
+
+  const _unsubscribeMag = () => {
+    subscriptionMag && subscriptionMag.remove();
+    setSubscriptionMag(null);
+  };
+
+  useEffect(() => {
+    _subscribeMag();
+    return () => _unsubscribeMag();
+  }, []);
+
+  // #16 Gyroscope
+
+
   // Panel Controller
   const [vNotif, setVNotif] = useState(false);
   const [vGeo, setVGeo] = useState(false);
   const [vCamera, setVCamera] = useState(false);
   const [vMic, setVMic] = useState(false);
+  const [vAccel, setvAccel] = useState(false);
+  const [vMag, setVMag] = useState(false);
 
   // useState
   const [expoPushToken, setExpoPushToken] = useState(""); // #2 #3 Notifications and Special Notifications
@@ -30,32 +74,42 @@ export default function App() {
   const [hasPermission, setHasPermission] = useState(null); // #5 Camera
   const [type, setType] = useState(Camera.Constants.Type.back);
   const [recording, setRecording] = React.useState(); // #7 Microphone Access
+  // #16 Accelerometer
+  const [dataAccel, setDataAccel] = useState({
+    x: 0,
+    y: 0,
+    z: 0,
+  });
+  const [subscriptionAccel, setSubscriptionAccel] = useState(null);
+
+  // #17 Magnetometer
+  const [dataMag, setDataMag] = useState({
+    x: 0,
+    y: 0,
+    z: 0,
+  });
+  const [subscriptionMag, setSubscriptionMag] = useState(null);
 
   // useRef
   const notificationListener = useRef(); // #2 #3 Notifications and Special Notifications
   const responseListener = useRef();
 
   // useEffect
+
   useEffect(() => {
     // #2 #3 Notifications and Special Notifications
-    registerForPushNotificationsAsync().then((token) =>
-      setExpoPushToken(token)
-    );
+    registerForPushNotificationsAsync().then((token) => setExpoPushToken(token));
 
-    notificationListener.current =
-      Notifications.addNotificationReceivedListener((notification) => {
-        setNotification(notification);
-      });
+    notificationListener.current = Notifications.addNotificationReceivedListener((notification) => {
+      setNotification(notification);
+    });
 
-    responseListener.current =
-      Notifications.addNotificationResponseReceivedListener((response) => {
-        console.log(response);
-      });
+    responseListener.current = Notifications.addNotificationResponseReceivedListener((response) => {
+      console.log(response);
+    });
 
     return () => {
-      Notifications.removeNotificationSubscription(
-        notificationListener.current
-      );
+      Notifications.removeNotificationSubscription(notificationListener.current);
       Notifications.removeNotificationSubscription(responseListener.current);
     };
   }, []);
@@ -133,9 +187,7 @@ export default function App() {
         playsInSilentModeIOS: true,
       });
       console.log("Starting recording..");
-      const { recording } = await Audio.Recording.createAsync(
-        Audio.RECORDING_OPTIONS_PRESET_HIGH_QUALITY
-      );
+      const { recording } = await Audio.Recording.createAsync(Audio.RECORDING_OPTIONS_PRESET_HIGH_QUALITY);
       setRecording(recording);
       console.log("Recording started");
     } catch (err) {
@@ -151,13 +203,31 @@ export default function App() {
     console.log("Recording stopped and stored at", uri);
   }
 
+  // #14 Accelerometer
+  const _slowAccel = () => {
+    Accelerometer.setUpdateInterval(1000);
+  };
+
+  const _fastAccel = () => {
+    Accelerometer.setUpdateInterval(16);
+  };
+
+  const { x: xAccel, y: yAccel, z: zAccel } = dataAccel;
+
+  // #15 Magnetometer
+  const _slowMag = () => {
+    Magnetometer.setUpdateInterval(1000);
+  };
+
+  const _fastMag = () => {
+    Magnetometer.setUpdateInterval(16);
+  };
+  const { x: xMag, y: yMag, z: zMag } = dataMag;
+
   return (
     <ScrollView style={{ padding: 40 }}>
       {/* #2 #3 Notifications and Special Notifications */}
-      <Button
-        title="Notifications and Special Notifications"
-        onPress={() => setVNotif(!vNotif)}
-      ></Button>
+      <Button title="Notifications and Special Notifications" onPress={() => setVNotif(!vNotif)}></Button>
       <View
         style={{
           display: vNotif ? null : "none",
@@ -165,14 +235,9 @@ export default function App() {
       >
         <Text>Your expo push token: {expoPushToken}</Text>
         <View style={{ alignItems: "center", justifyContent: "center" }}>
-          <Text>
-            Title: {notification && notification.request.content.title}{" "}
-          </Text>
+          <Text>Title: {notification && notification.request.content.title} </Text>
           <Text>Body: {notification && notification.request.content.body}</Text>
-          <Text>
-            Data:{" "}
-            {notification && JSON.stringify(notification.request.content.data)}
-          </Text>
+          <Text>Data: {notification && JSON.stringify(notification.request.content.data)}</Text>
         </View>
         <Button
           title="Press to schedule a notification"
@@ -199,11 +264,7 @@ export default function App() {
           <View>
             <TouchableOpacity
               onPress={() => {
-                setType(
-                  type === Camera.Constants.Type.back
-                    ? Camera.Constants.Type.front
-                    : Camera.Constants.Type.back
-                );
+                setType(type === Camera.Constants.Type.back ? Camera.Constants.Type.front : Camera.Constants.Type.back);
               }}
             >
               <Text> Flip </Text>
@@ -218,10 +279,50 @@ export default function App() {
       {/* #7 Microphone */}
       <Button title="Microphone Access" onPress={() => setVMic(!vMic)}></Button>
       <View style={{ display: vMic ? null : "none" }}>
-        <Button
-          title={recording ? "Stop recording" : "Start recording"}
-          onPress={recording ? stopRecording : startRecording}
-        ></Button>
+        <Button title={recording ? "Stop recording" : "Start recording"} onPress={recording ? stopRecording : startRecording}></Button>
+      </View>
+
+      {/* Button view */}
+      <Button title="Microphone Access" onPress={() => setVMic(!vMic)}></Button>
+      <View style={{ display: vMic ? null : "none" }}></View>
+
+      {/* #14 Accelerometer */}
+      <Button title="Accelerometer" onPress={() => setvAccel(!vAccel)}></Button>
+      <View style={{ display: vAccel ? null : "none" }}>
+        <Text>Accelerometer: (in Gs where 1 G = 9.81 m s^-2)</Text>
+        <Text>
+          x: {round(xAccel)} y: {round(yAccel)} z: {round(zAccel)}
+        </Text>
+        <View>
+          <TouchableOpacity onPress={subscriptionAccel ? _unsubscribeAccel : _subscribeAccel}>
+            <Text>{subscriptionAccel ? "On" : "Off"}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={_slowAccel}>
+            <Text>Slow</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={_fastAccel}>
+            <Text>Fast</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+      {/* #15 Magnetometer */}
+      <Button title="Magnetometer" onPress={() => setVMag(!vMag)}></Button>
+      <View style={{ display: vMag ? null : "none" }}>
+        <Text>Magnetometer:</Text>
+        <Text>
+          x: {round(xMag)} y: {round(yMag)} z: {round(zMag)}
+        </Text>
+        <View>
+          <TouchableOpacity onPress={subscriptionMag ? _unsubscribeMag : _subscribeMag}>
+            <Text>{subscriptionMag ? "On" : "Off"}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={_slowMag}>
+            <Text>Slow</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={_fastMag}>
+            <Text>Fast</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </ScrollView>
   );
@@ -242,8 +343,7 @@ async function schedulePushNotification() {
 async function registerForPushNotificationsAsync() {
   let token;
   if (Constants.isDevice) {
-    const { status: existingStatus } =
-      await Notifications.getPermissionsAsync();
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
     if (existingStatus !== "granted") {
       const { status } = await Notifications.requestPermissionsAsync();
