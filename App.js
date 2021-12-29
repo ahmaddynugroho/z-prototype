@@ -291,7 +291,7 @@ export default function App() {
       <View style={{ display: vAccel ? null : "none" }}>
         <Text>Accelerometer: (in Gs where 1 G = 9.81 m s^-2)</Text>
         <Text>
-          x: {round(xAccel)} y: {round(yAccel)} z: {round(zAccel)}
+          x: {Math.floor(xAccel)} y: {Math.floor(yAccel)} z: {Math.floor(zAccel)}
         </Text>
         <View>
           <TouchableOpacity onPress={subscriptionAccel ? _unsubscribeAccel : _subscribeAccel}>
@@ -310,7 +310,7 @@ export default function App() {
       <View style={{ display: vMag ? null : "none" }}>
         <Text>Magnetometer:</Text>
         <Text>
-          x: {round(xMag)} y: {round(yMag)} z: {round(zMag)}
+          x: {Math.floor(xMag)} y: {Math.floor(yMag)} z: {Math.floor(zMag)}
         </Text>
         <View>
           <TouchableOpacity onPress={subscriptionMag ? _unsubscribeMag : _subscribeMag}>
