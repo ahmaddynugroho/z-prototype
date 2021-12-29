@@ -4,6 +4,7 @@ import { Accelerometer, Magnetometer, Gyroscope } from "expo-sensors";
 import Constants from "expo-constants";
 import * as LocalAuthentication from 'expo-local-authentication';
 import * as Contacts from "expo-contacts";
+import * as Cellular from 'expo-cellular';
 import * as Location from "expo-location";
 import * as Notifications from "expo-notifications";
 import React, { useEffect, useRef, useState } from "react";
@@ -57,7 +58,23 @@ export default function App() {
   }, []);
 
   // #16 Gyroscope
+  const _subscribeGyro = () => {
+    setSubscriptionGyro(
+      Gyroscope.addListener(gyroscopeData => {
+        setDataGyro(gyroscopeData)
+      })
+    );
+  };
 
+  const _unsubscribeGyro = () => {
+    subscriptionGyro && subscriptionGyro.remove();
+    setSubscriptionGyro(null);
+  };
+
+  useEffect(() => {
+    _subscribeGyro();
+    return () => _unsubscribeGyro();
+  }, []);
 
   // Panel Controller
   const [vNotif, setVNotif] = useState(false);
@@ -67,6 +84,7 @@ export default function App() {
   const [vAccel, setvAccel] = useState(false);
   const [vMag, setVMag] = useState(false);
   const [vFp, setVFp] = useState(false)
+  const [vGyro, setVGyro] = useState(false)
 
   // useState
   const [expoPushToken, setExpoPushToken] = useState(""); // #2 #3 Notifications and Special Notifications
@@ -91,6 +109,15 @@ export default function App() {
     z: 0,
   });
   const [subscriptionMag, setSubscriptionMag] = useState(null);
+
+  // #16 Gyroscope
+  const [dataGyro, setDataGyro] = useState({
+    x: 0,
+    y: 0,
+    z: 0,
+  });
+  const [subscriptionGyro, setSubscriptionGyro] = useState(null);
+
 
   // useRef
   const notificationListener = useRef(); // #2 #3 Notifications and Special Notifications
@@ -226,10 +253,23 @@ export default function App() {
   };
   const { x: xMag, y: yMag, z: zMag } = dataMag;
 
+  // #16 Gyroscope
+  const _slowGyro = () => {
+    Gyroscope.setUpdateInterval(1000);
+  };
+
+  const _fastGyro = () => {
+    Gyroscope.setUpdateInterval(16);
+  };
+  const { x: xGyro, y: yGyro, z: zGyro } = dataGyro;
   // #9 Fingerprint & #10 FaceID
   const fingerprint = async () => {
     await LocalAuthentication.authenticateAsync()
   }
+
+  // #19 Cellular Number
+
+
   return (
     <ScrollView style={{ padding: 40 }}>
       {/* #2 #3 Notifications and Special Notifications */}
@@ -329,6 +369,26 @@ export default function App() {
             <Text>Fast</Text>
           </TouchableOpacity>
         </View>
+      </View>
+
+      {/* #16 Gyroscope */}
+      <Button title="Gyroscope" onPress={() => setVGyro(!vGyro)}></Button>
+      <View style={{ display: vGyro ? null : "none" }}>
+      <Text>Gyroscope:</Text>
+      <Text>
+        x: {Math.floor(xGyro)} y: {Math.floor(yGyro)} z: {Math.floor(zGyro)}
+      </Text>
+      <View>
+        <TouchableOpacity onPress={subscriptionGyro ? _unsubscribeGyro : _subscribeGyro}>
+          <Text>{subscriptionGyro ? 'On' : 'Off'}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={_slowGyro}>
+          <Text>Slow</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={_fastGyro}>
+          <Text>Fast</Text>
+        </TouchableOpacity>
+      </View>
       </View>
 
       {/* #9 Fingerprint & #10 FaceID */}
