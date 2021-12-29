@@ -1,6 +1,7 @@
 import { Audio } from 'expo-av'
 import { Camera } from 'expo-camera'
 import Constants from 'expo-constants'
+import * as Contacts from 'expo-contacts'
 import * as Location from 'expo-location'
 import * as Notifications from 'expo-notifications'
 import React, { useEffect, useRef, useState } from 'react'
@@ -76,6 +77,22 @@ export default function App() {
     (async () => {
       const { status } = await Camera.requestPermissionsAsync();
       setHasPermission(status === "granted");
+    })();
+  }, []);
+  useEffect(() => {
+    // #8 Contact Book
+    (async () => {
+      const { status } = await Contacts.requestPermissionsAsync();
+      if (status === "granted") {
+        const { data } = await Contacts.getContactsAsync({
+          fields: [Contacts.Fields.Emails],
+        });
+
+        if (data.length > 0) {
+          const contact = data[0];
+          console.log(contact);
+        }
+      }
     })();
   }, []);
 
