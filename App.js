@@ -2,6 +2,7 @@ import { Audio } from "expo-av";
 import { Camera } from "expo-camera";
 import { Accelerometer, Magnetometer, Gyroscope } from "expo-sensors";
 import Constants from "expo-constants";
+import * as LocalAuthentication from 'expo-local-authentication';
 import * as Contacts from "expo-contacts";
 import * as Location from "expo-location";
 import * as Notifications from "expo-notifications";
@@ -65,6 +66,7 @@ export default function App() {
   const [vMic, setVMic] = useState(false);
   const [vAccel, setvAccel] = useState(false);
   const [vMag, setVMag] = useState(false);
+  const [vFp, setVFp] = useState(false)
 
   // useState
   const [expoPushToken, setExpoPushToken] = useState(""); // #2 #3 Notifications and Special Notifications
@@ -224,6 +226,13 @@ export default function App() {
   };
   const { x: xMag, y: yMag, z: zMag } = dataMag;
 
+  // #9 Fingerprint
+  const fingerprint = async () => {
+    await LocalAuthentication.authenticateAsync()
+  }
+
+  // #10 FaceID
+
   return (
     <ScrollView style={{ padding: 40 }}>
       {/* #2 #3 Notifications and Special Notifications */}
@@ -324,6 +333,13 @@ export default function App() {
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* #9 Fingerprint */}
+      <Button title="Fingerprint" onPress={() => setVFp(!vFp)}></Button>
+      <View style={{ display: vFp ? null : "none" }}>
+        <Text>Fingerprint:</Text>
+              <Button title="Authenticate!" onPress={fingerprint} ></Button>
+        </View>
     </ScrollView>
   );
 }

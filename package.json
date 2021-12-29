@@ -21,7 +21,8 @@
     "expo-camera": "~12.1.0",
     "expo-av": "~10.2.0",
     "expo-contacts": "~10.1.0",
-    "expo-sensors": "~11.1.0"
+    "expo-sensors": "~11.1.0",
+    "expo-local-authentication": "~12.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9"
