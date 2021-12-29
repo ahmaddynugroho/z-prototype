@@ -226,13 +226,10 @@ export default function App() {
   };
   const { x: xMag, y: yMag, z: zMag } = dataMag;
 
-  // #9 Fingerprint
+  // #9 Fingerprint & #10 FaceID
   const fingerprint = async () => {
     await LocalAuthentication.authenticateAsync()
   }
-
-  // #10 FaceID
-
   return (
     <ScrollView style={{ padding: 40 }}>
       {/* #2 #3 Notifications and Special Notifications */}
@@ -292,8 +289,8 @@ export default function App() {
       </View>
 
       {/* Button view */}
-      <Button title="Microphone Access" onPress={() => setVMic(!vMic)}></Button>
-      <View style={{ display: vMic ? null : "none" }}></View>
+      {/* <Button title="Microphone Access" onPress={() => setVMic(!vMic)}></Button>
+      <View style={{ display: vMic ? null : "none" }}></View> */}
 
       {/* #14 Accelerometer */}
       <Button title="Accelerometer" onPress={() => setvAccel(!vAccel)}></Button>
@@ -334,10 +331,10 @@ export default function App() {
         </View>
       </View>
 
-      {/* #9 Fingerprint */}
-      <Button title="Fingerprint" onPress={() => setVFp(!vFp)}></Button>
+      {/* #9 Fingerprint & #10 FaceID */}
+      <Button title="Fingerprint and FaceID" onPress={() => setVFp(!vFp)}></Button>
       <View style={{ display: vFp ? null : "none" }}>
-        <Text>Fingerprint:</Text>
+        <Text>Fingerprint and FaceID:</Text>
               <Button title="Authenticate!" onPress={fingerprint} ></Button>
         </View>
     </ScrollView>
