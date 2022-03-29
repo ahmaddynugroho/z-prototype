@@ -8,7 +8,7 @@ import * as Cellular from 'expo-cellular';
 import * as Location from "expo-location";
 import * as Notifications from "expo-notifications";
 import React, { useEffect, useRef, useState } from "react";
-import { Button, Platform, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { Button, Platform, StyleSheet, ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -83,8 +83,9 @@ export default function App() {
   const [vMic, setVMic] = useState(false);
   const [vAccel, setvAccel] = useState(false);
   const [vMag, setVMag] = useState(false);
-  const [vFp, setVFp] = useState(false)
-  const [vGyro, setVGyro] = useState(false)
+  const [vFp, setVFp] = useState(false);
+  const [vGyro, setVGyro] = useState(false);
+  const [vContact, setVContact] = useState(false);
 
   // useState
   const [expoPushToken, setExpoPushToken] = useState(""); // #2 #3 Notifications and Special Notifications
@@ -94,6 +95,12 @@ export default function App() {
   const [hasPermission, setHasPermission] = useState(null); // #5 Camera
   const [type, setType] = useState(Camera.Constants.Type.back);
   const [recording, setRecording] = React.useState(); // #7 Microphone Access
+  // #8 Contacts
+  const [dataContact, setDataContact] = useState({
+    firstName: "",
+    lastName: "",
+    number: "",
+  })
   // #16 Accelerometer
   const [dataAccel, setDataAccel] = useState({
     x: 0,
@@ -158,7 +165,7 @@ export default function App() {
   useEffect(() => {
     // #5 Camera
     (async () => {
-      const { status } = await Camera.requestPermissionsAsync();
+      const { status } = await Camera.requestCameraPermissionsAsync();
       setHasPermission(status === "granted");
     })();
   }, []);
@@ -168,16 +175,27 @@ export default function App() {
       const { status } = await Contacts.requestPermissionsAsync();
       if (status === "granted") {
         const { data } = await Contacts.getContactsAsync({
-          fields: [Contacts.Fields.Emails],
+          fields: [Contacts.Fields.PhoneNumbers],
         });
-
         if (data.length > 0) {
           const contact = data[0];
-          console.log(contact);
+          setDataContact({
+            firstName: contact.firstName,
+            lastName: contact.lastName,
+            number: contact.phoneNumbers[0].number
+          });
         }
       }
     })();
   }, []);
+  useEffect(() => {
+    // #8 Contact Book (EDIT)
+    async () => {
+
+    }
+  }, []);
+
+
 
   // #2 #3 Notifications and Special Notifications
 
@@ -203,7 +221,7 @@ export default function App() {
     try {
       await sound.loadAsync(require("./assets/risitas.mp3"));
       await sound.playAsync();
-    } catch (error) {}
+    } catch (error) { }
   };
 
   // #7 Microphone
@@ -328,6 +346,15 @@ export default function App() {
         <Button title={recording ? "Stop recording" : "Start recording"} onPress={recording ? stopRecording : startRecording}></Button>
       </View>
 
+      {/* #8 Contact */}
+      <Button title="Contact List" onPress={() => setVContact(!vContact)}></Button>
+      <View style={{ display: vContact ? null : "none" }}>
+        <Text>First Name: {dataContact.firstName}</Text>
+        <Text>Last Name: {dataContact.lastName}</Text>
+        <Text>Phone Number: {dataContact.number}</Text>
+        <Button title="editContact" onPress={editContactAsync}></Button>
+      </View>
+
       {/* Button view */}
       {/* <Button title="Microphone Access" onPress={() => setVMic(!vMic)}></Button>
       <View style={{ display: vMic ? null : "none" }}></View> */}
@@ -374,29 +401,29 @@ export default function App() {
       {/* #16 Gyroscope */}
       <Button title="Gyroscope" onPress={() => setVGyro(!vGyro)}></Button>
       <View style={{ display: vGyro ? null : "none" }}>
-      <Text>Gyroscope:</Text>
-      <Text>
-        x: {Math.floor(xGyro)} y: {Math.floor(yGyro)} z: {Math.floor(zGyro)}
-      </Text>
-      <View>
-        <TouchableOpacity onPress={subscriptionGyro ? _unsubscribeGyro : _subscribeGyro}>
-          <Text>{subscriptionGyro ? 'On' : 'Off'}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={_slowGyro}>
-          <Text>Slow</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={_fastGyro}>
-          <Text>Fast</Text>
-        </TouchableOpacity>
-      </View>
+        <Text>Gyroscope:</Text>
+        <Text>
+          x: {Math.floor(xGyro)} y: {Math.floor(yGyro)} z: {Math.floor(zGyro)}
+        </Text>
+        <View>
+          <TouchableOpacity onPress={subscriptionGyro ? _unsubscribeGyro : _subscribeGyro}>
+            <Text>{subscriptionGyro ? 'On' : 'Off'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={_slowGyro}>
+            <Text>Slow</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={_fastGyro}>
+            <Text>Fast</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* #9 Fingerprint & #10 FaceID */}
       <Button title="Fingerprint and FaceID" onPress={() => setVFp(!vFp)}></Button>
       <View style={{ display: vFp ? null : "none" }}>
         <Text>Fingerprint and FaceID:</Text>
-              <Button title="Authenticate!" onPress={fingerprint} ></Button>
-        </View>
+        <Button title="Authenticate!" onPress={fingerprint} ></Button>
+      </View>
     </ScrollView>
   );
 }
@@ -442,4 +469,24 @@ async function registerForPushNotificationsAsync() {
   }
 
   return token;
+}
+async function editContactAsync() {
+  const { status } = await Contacts.requestPermissionsAsync();
+  if (status === "granted") {
+    const { data } = await Contacts.getContactsAsync({
+      fields: [Contacts.Fields.PhoneNumbers],
+    });
+    if (data.length > 0) {
+      const contact = data[0];
+      console.log(contact);
+      if (Platform.OS === "android") {
+        const adin = await Contacts.presentFormAsync(contact.id);
+        console.log(adin);
+      }
+      else {
+        const adin = await Contacts.updateContactAsync(contact.id);
+        console.log(adin);
+      }
+    }
+  }
 }

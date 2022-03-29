@@ -10,20 +10,21 @@
   },
   "dependencies": {
     "expo": "~44.0.1",
+    "expo-av": "~10.2.0",
+    "expo-camera": "~12.1.2",
+    "expo-cellular": "~4.1.0",
+    "expo-contacts": "~10.1.0",
+    "expo-local-authentication": "~12.1.0",
+    "expo-location": "~14.0.1",
+    "expo-notifications": "~0.14.0",
+    "expo-sensors": "~11.1.0",
     "expo-splash-screen": "~0.14.1",
     "expo-status-bar": "~1.2.0",
     "react": "17.0.1",
     "react-dom": "17.0.1",
     "react-native": "0.64.3",
-    "react-native-web": "0.17.1",
-    "expo-location": "~14.0.1",
-    "expo-notifications": "~0.14.0",
-    "expo-camera": "~12.1.0",
-    "expo-av": "~10.2.0",
-    "expo-contacts": "~10.1.0",
-    "expo-sensors": "~11.1.0",
-    "expo-local-authentication": "~12.1.0",
-    "expo-cellular": "~4.1.0"
+    "react-native-contacts": "^7.0.4",
+    "react-native-web": "0.17.1"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9"
