@@ -2,11 +2,13 @@ import { Audio } from "expo-av";
 import { Camera } from "expo-camera";
 import { Accelerometer, Magnetometer, Gyroscope } from "expo-sensors";
 import Constants from "expo-constants";
-import * as LocalAuthentication from 'expo-local-authentication';
+import * as LocalAuthentication from "expo-local-authentication";
 import * as Contacts from "expo-contacts";
-import * as Cellular from 'expo-cellular';
+import * as Cellular from "expo-cellular";
 import * as Location from "expo-location";
 import * as Notifications from "expo-notifications";
+import * as FaceDetector from "expo-face-detector"; //This is the import to add facedetector
+import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useRef, useState } from "react";
 import { Button, Platform, StyleSheet, ScrollView, Text, TouchableOpacity, View } from "react-native";
 
@@ -60,8 +62,8 @@ export default function App() {
   // #16 Gyroscope
   const _subscribeGyro = () => {
     setSubscriptionGyro(
-      Gyroscope.addListener(gyroscopeData => {
-        setDataGyro(gyroscopeData)
+      Gyroscope.addListener((gyroscopeData) => {
+        setDataGyro(gyroscopeData);
       })
     );
   };
@@ -100,7 +102,7 @@ export default function App() {
     firstName: "",
     lastName: "",
     number: "",
-  })
+  });
   // #16 Accelerometer
   const [dataAccel, setDataAccel] = useState({
     x: 0,
@@ -124,7 +126,6 @@ export default function App() {
     z: 0,
   });
   const [subscriptionGyro, setSubscriptionGyro] = useState(null);
-
 
   // useRef
   const notificationListener = useRef(); // #2 #3 Notifications and Special Notifications
@@ -167,6 +168,19 @@ export default function App() {
     (async () => {
       const { status } = await Camera.requestCameraPermissionsAsync();
       setHasPermission(status === "granted");
+      // IDK what is this but i think i can wrote like this one
+      // what im i doing is added faces detected using this source:https://docs.expo.dev/versions/latest/sdk/facedetector/
+      // its devide by 2 this below and on line 233, also the import thing is on line 10
+      <Camera
+        onFacesDetected={handleFacesDetected}
+        faceDetectorSettings={{
+          mode: FaceDetector.FaceDetectorMode.fast,
+          detecLandmarks: FaceDetector.FaceDetectorLandmarks.none,
+          runClassifications: FaceDetector.FaceDetectorClassifications.none,
+          minDetectionInterval: 100,
+          tracking: true,
+        }}
+      ></Camera>;
     })();
   }, []);
   useEffect(() => {
@@ -182,20 +196,22 @@ export default function App() {
           setDataContact({
             firstName: contact.firstName,
             lastName: contact.lastName,
-            number: contact.phoneNumbers[0].number
+            number: contact.phoneNumbers[0].number,
           });
         }
       }
     })();
   }, []);
   useEffect(() => {
-    // #8 Contact Book (EDIT)
+    // #8 Contact Book (Copy)
+    // IDK WHAT IM I DOING source:https://docs.expo.dev/versions/latest/sdk/contacts/
     async () => {
-
-    }
+      const localUri = await Contacts.writeContactToFileAsync({
+        id: "161A368D-D614-4A15-8DC6-665FDBCFAE55",
+      });
+      Share.Share({ url: localUri, message: "Ngampus ga nih?" });
+    };
   }, []);
-
-
 
   // #2 #3 Notifications and Special Notifications
 
@@ -214,6 +230,10 @@ export default function App() {
   if (hasPermission === false) {
     return <Text>No access to camera</Text>;
   }
+  // This is the contiune from what i added for faces detection from [171-180]
+  const handleFacesDetected = ({ faces }) => {
+    console.log(faces);
+  };
 
   // #6 Speaker
   const playSound = async () => {
@@ -221,7 +241,7 @@ export default function App() {
     try {
       await sound.loadAsync(require("./assets/risitas.mp3"));
       await sound.playAsync();
-    } catch (error) { }
+    } catch (error) {}
   };
 
   // #7 Microphone
@@ -282,11 +302,10 @@ export default function App() {
   const { x: xGyro, y: yGyro, z: zGyro } = dataGyro;
   // #9 Fingerprint & #10 FaceID
   const fingerprint = async () => {
-    await LocalAuthentication.authenticateAsync()
-  }
+    await LocalAuthentication.authenticateAsync();
+  };
 
   // #19 Cellular Number
-
 
   return (
     <ScrollView style={{ padding: 40 }}>
@@ -407,7 +426,7 @@ export default function App() {
         </Text>
         <View>
           <TouchableOpacity onPress={subscriptionGyro ? _unsubscribeGyro : _subscribeGyro}>
-            <Text>{subscriptionGyro ? 'On' : 'Off'}</Text>
+            <Text>{subscriptionGyro ? "On" : "Off"}</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={_slowGyro}>
             <Text>Slow</Text>
@@ -422,7 +441,7 @@ export default function App() {
       <Button title="Fingerprint and FaceID" onPress={() => setVFp(!vFp)}></Button>
       <View style={{ display: vFp ? null : "none" }}>
         <Text>Fingerprint and FaceID:</Text>
-        <Button title="Authenticate!" onPress={fingerprint} ></Button>
+        <Button title="Authenticate!" onPress={fingerprint}></Button>
       </View>
     </ScrollView>
   );
@@ -482,8 +501,7 @@ async function editContactAsync() {
       if (Platform.OS === "android") {
         const adin = await Contacts.presentFormAsync(contact.id);
         console.log(adin);
-      }
-      else {
+      } else {
         const adin = await Contacts.updateContactAsync(contact.id);
         console.log(adin);
       }
